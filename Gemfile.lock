@@ -1,0 +1,19 @@
+PATH
+  remote: .
+  specs:
+    ku (0.0.1)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    rake (11.2.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  ku!
+  rake
+
+BUNDLED WITH
+   1.12.1
