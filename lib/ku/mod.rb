@@ -1,4 +1,5 @@
 require "json"
+require "open-uri"
 
 module Ku
   class Mod
@@ -32,11 +33,17 @@ module Ku
     attr_accessor :download_hash
     # @returns [String]
     attr_accessor :download_content_type
+    # @returns [Array<Hash>]
+    attr_accessor :depends
+    # @returns [Array<Hash>]
+    attr_accessor :recommends
+    # @returns [Array<Hash>]
+    attr_accessor :suggests
     # @returns [String]
     attr_accessor :x_generated_by
 
-    FIELDS = %w{ spec_version identifier name abstract author license resources version ksp_version_min ksp_version_max install
-      download download_size download_hash download_content_type x_generated_by }
+    FIELDS = %w{ spec_version identifier name abstract author license resources version ksp_version_min ksp_version_max
+                 install download download_size download_hash download_content_type depends recommends suggests x_generated_by }.freeze
 
     def from_json(s)
       h = JSON.parse(s)
@@ -44,7 +51,7 @@ module Ku
     end
 
     def self.from_json(s)
-      mod = self.new()
+      mod = new
       mod.from_json(s)
       mod
     end
@@ -56,9 +63,15 @@ module Ku
     end
 
     def self.from_hash(h)
-      mod = self.new()
+      mod = new
       mod.from_hash(h)
       mod
+    end
+
+    def to_file(filename)
+      File.open(filename, "w+") do |f|
+        f.write to_json
+      end
     end
 
     def from_file(f)
@@ -66,8 +79,18 @@ module Ku
     end
 
     def self.from_file(f)
-      mod = self.new()
+      mod = new
       mod.from_file(f)
+      mod
+    end
+
+    def from_uri(uri)
+      from_json(open(uri.to_s).read)
+    end
+
+    def self.from_uri(uri)
+      mod = new
+      mod.from_uri(uri)
       mod
     end
 
@@ -84,9 +107,9 @@ module Ku
       JSON.generate(to_hash, *o)
     end
 
-    def eql?(o)
+    def eql?(other)
       FIELDS.all? do |f|
-        send(:"#{f}").eql?(o.send(:"#{f}"))
+        send(:"#{f}").eql?(other.send(:"#{f}"))
       end
     end
   end

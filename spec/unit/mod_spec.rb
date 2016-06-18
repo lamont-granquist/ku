@@ -4,13 +4,13 @@ require "ku/mod"
 require "json"
 
 describe Ku::Mod do
-  let (:data_file) { File.join(SPEC_DATA, "KerboKatzUtilities-1.3.7.ckan") }
-  let (:json) { IO.read(data_file) }
-  let (:hash) { JSON.parse(json) }
+  let(:data_file) { File.join(SPEC_DATA, "KerboKatzUtilities-1.3.7.ckan") }
+  let(:json) { IO.read(data_file) }
+  let(:hash) { JSON.parse(json) }
 
   context "#eql?" do
-    let (:a) { Ku::Mod.from_json(json) }
-    let (:b) { Ku::Mod.from_json(json) }
+    let(:a) { Ku::Mod.from_json(json) }
+    let(:b) { Ku::Mod.from_json(json) }
 
     it "identical mods should be identical" do
       expect(a).to eql(b)
