@@ -1,8 +1,13 @@
 require "ku/mod"
+require "open-uri"
+require "tempfile"
+require "tmpdir"
+require "ku/util/extract_tgz"
 
 module Ku
   class ModCollection
     attr_accessor :mods
+    include Ku::Util::ExtractTgz
 
     def mods
       @mods ||= []
@@ -42,6 +47,12 @@ module Ku
       mc
     end
 
+    def to_file(filename)
+      File.open(filename, "w+") do |f|
+        f.write to_json
+      end
+    end
+
     def from_file(f)
       from_json(IO.read(f))
     end
@@ -49,6 +60,33 @@ module Ku
     def self.from_file(f)
       mc = new
       mc.from_file(f)
+      mc
+    end
+
+    def from_tgz(file)
+      Dir.mktmpdir do |dir|
+        extract_tgz(file, dir)
+        from_dir(dir)
+      end
+    end
+
+    def self.from_tgz(file)
+      mc = new
+      mc.from_tgz(file)
+      mc
+    end
+
+    def from_uri(uri)
+      Tempfile.open('ku.tgz') do |f|
+        f.write open(uri.to_s).read
+        f.close
+        from_tgz(f.path)
+      end
+    end
+
+    def self.from_uri(uri)
+      mc = new
+      mc.from_uri(uri)
       mc
     end
 
