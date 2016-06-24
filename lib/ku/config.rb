@@ -27,7 +27,7 @@ module Ku
     end
 
     config :sources, default: {
-      default: "https://github.com/KSP-CKAN/CKAN-meta/archive/master.tar.gz"
+      default: "https://github.com/KSP-CKAN/CKAN-meta/archive/master.tar.gz",
     }
 
     def [](key)

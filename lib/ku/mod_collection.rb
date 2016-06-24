@@ -3,11 +3,13 @@ require "open-uri"
 require "tempfile"
 require "tmpdir"
 require "ku/util/extract_tgz"
+require "ku/rest_base"
 
 module Ku
   class ModCollection
     attr_accessor :mods
     include Ku::Util::ExtractTgz
+    include RestBase
 
     def mods
       @mods ||= []
@@ -20,46 +22,13 @@ module Ku
       end
     end
 
+    def fields
+      %w{mods}
+    end
+
     def self.from_dir(dir)
       mc = new
       mc.from_dir(dir)
-      mc
-    end
-
-    def from_json(s)
-      h = JSON.parse(s)
-      from_hash(h)
-    end
-
-    def self.from_json(s)
-      mc = new
-      mc.from_json(s)
-      mc
-    end
-
-    def from_hash(h)
-      self.mods = h["mods"] if h.key?("mods")
-    end
-
-    def self.from_hash(h)
-      mc = new
-      mc.from_hash(h)
-      mc
-    end
-
-    def to_file(filename)
-      File.open(filename, "w+") do |f|
-        f.write to_json
-      end
-    end
-
-    def from_file(f)
-      from_json(IO.read(f))
-    end
-
-    def self.from_file(f)
-      mc = new
-      mc.from_file(f)
       mc
     end
 
@@ -77,7 +46,7 @@ module Ku
     end
 
     def from_uri(uri)
-      Tempfile.open('ku.tgz') do |f|
+      Tempfile.open("ku.tgz") do |f|
         f.write open(uri.to_s).read
         f.close
         from_tgz(f.path)
@@ -90,18 +59,12 @@ module Ku
       mc
     end
 
-    def to_hash
-      {
-        "mods" => mods.to_hash,
-      }
-    end
-
-    def to_json(*o)
-      JSON.generate(to_hash, *o)
-    end
-
-    def eql?(other)
-      mods.eql?(other.mods)
+    def to_s
+      lines = []
+      mods.each do |mod|
+        lines << [ mod.identifier, mod.version, mod.author, mod.name ].join(", ")
+      end
+      lines.join("\n")
     end
   end
 end

@@ -1,44 +1,50 @@
-require "open-uri"
 require "ku/config"
 require "ku/mod_collection"
 require "ku/kerbfile"
-require "ku/util/extract_tgz"
-require "json"
+require "ku/repolist"
 
 module Ku
   class App
     include Ku::Util::ExtractTgz
     attr_accessor :kerbfile
 
+    attr_accessor :mod_collection
+
+    attr_accessor :repolist
+
     def kerbfile
       @kerbfile ||= Kerbfile.read
+    end
+
+    def repolist
+      # FIXME: for now we hardcode always loading the default repolist
+      @repolist ||= Repolist.load_default
+    end
+
+    def mod_collection
+      @mod_collection ||= ModCollection.new
     end
 
     def config
       Config.instance
     end
 
-    def init_config
-      config.load
-      # ugly special handling for ckan source, since it also has the repositories.json
-      Tempfile.open("ckan.tgz") do |f|
-        f.write open(config[:sources][:default]).read
-        f.close
-        Dir.mktmpdir do |dir|
-          extract_tgz(f.path, dir)
-          ModCollection.from_dir(dir)  # FIXME: shovel this somewhere
-          repositories = JSON.parse(IO.read(File.join(dir, "CKAN-meta-master", "repositories.json")))
-          rep_hash = Hash[ repositories["repositories"].collect { |v| [ v["name"].downcase.gsub(/-/, "_").to_sym, v["uri"] ] } ]
-          config[:sources] = config[:sources].merge(rep_hash)
-        end
+    def read_sources
+      kerbfile.sources.each do |src|
+        raise "bad source: #{src}" unless repolist.repo?(src)
+        puts "downloading #{repolist[src][:uri]}..."
+        mod_collection.from_uri(repolist[src][:uri])
       end
     end
 
+    def init
+      config.load
+      read_sources
+    end
+
     def search
-      init_config
-      require "pp"
-      pp config[:sources]
-      pp kerbfile
+      init
+      puts mod_collection
     end
   end
 end
