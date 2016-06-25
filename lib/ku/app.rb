@@ -42,9 +42,9 @@ module Ku
       read_sources
     end
 
-    def search
+    def search(string = nil, **args)
       init
-      puts mod_collection
+      puts mod_collection.filter(string, **args)
     end
   end
 end
